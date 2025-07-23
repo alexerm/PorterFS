@@ -31,6 +31,7 @@ func main() {
 		Region:           aws.String("us-east-1"),
 		Credentials:      credentials.NewStaticCredentials(*accessKey, *secretKey, ""),
 		S3ForcePathStyle: aws.Bool(true),
+		DisableSSL:       aws.Bool(true),
 	}
 
 	// For HTTPS endpoints with self-signed certificates

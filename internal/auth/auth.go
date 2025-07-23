@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"sort"
@@ -24,13 +25,16 @@ func New(config *config.Config) *Authenticator {
 func (a *Authenticator) Authenticate(r *http.Request) error {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
+		log.Printf("DEBUG: Missing authorization header\n")
 		return fmt.Errorf("missing authorization header")
 	}
 
 	if !strings.HasPrefix(authHeader, "AWS4-HMAC-SHA256") {
+		log.Printf("DEBUG: Unsupported authorization method: %s\n", authHeader)
 		return fmt.Errorf("unsupported authorization method")
 	}
 
+	log.Printf("DEBUG: Processing AWS4-HMAC-SHA256 authorization\n")
 	return a.validateV4Signature(r, authHeader)
 }
 
@@ -38,6 +42,7 @@ func (a *Authenticator) validateV4Signature(r *http.Request, authHeader string) 
 	// Expected format: AWS4-HMAC-SHA256 Credential=..., SignedHeaders=..., Signature=...
 	parts := strings.SplitN(authHeader, " ", 2)
 	if len(parts) != 2 {
+		log.Printf("DEBUG: Invalid authorization header format\n")
 		return fmt.Errorf("invalid authorization header format")
 	}
 
@@ -60,34 +65,43 @@ func (a *Authenticator) validateV4Signature(r *http.Request, authHeader string) 
 		}
 	}
 
+	log.Printf("DEBUG: Parsed components - Credential: %s, Signature: %s, SignedHeaders: %s\n", credentialPart, signaturePart, signedHeadersPart)
+
 	if credentialPart == "" || signaturePart == "" || signedHeadersPart == "" {
+		log.Printf("DEBUG: Missing required authorization components\n")
 		return fmt.Errorf("missing required authorization components")
 	}
 
 	credParts := strings.Split(credentialPart, "/")
 	if len(credParts) != 5 {
+		log.Printf("DEBUG: Invalid credential format, expected 5 parts, got %d\n", len(credParts))
 		return fmt.Errorf("invalid credential format")
 	}
 
 	accessKey := credParts[0]
 	if accessKey != a.config.Auth.AccessKey {
+		log.Printf("DEBUG: Access key mismatch. Expected: %s, Got: %s\n", a.config.Auth.AccessKey, accessKey)
 		return fmt.Errorf("invalid access key")
 	}
 
 	expectedSignature, err := a.calculateSignature(r, credentialPart, signedHeadersPart)
 	if err != nil {
+		log.Printf("DEBUG: Failed to calculate signature: %v\n", err)
 		return fmt.Errorf("failed to calculate signature: %w", err)
 	}
 
 	if signaturePart != expectedSignature {
+		log.Printf("DEBUG: Signature mismatch. Expected: %s, Got: %s\n", expectedSignature, signaturePart)
 		return fmt.Errorf("signature mismatch")
 	}
 
+	log.Printf("DEBUG: Authentication successful\n")
 	return nil
 }
 
 func (a *Authenticator) calculateSignature(r *http.Request, credential, signedHeaders string) (string, error) {
-	canonicalRequest := a.createCanonicalRequest(r, signedHeaders)
+	canonicalRequest := a.CreateCanonicalRequest(r, signedHeaders)
+	log.Printf("DEBUG: Canonical request:\n%s", canonicalRequest)
 
 	credParts := strings.Split(credential, "/")
 	dateStamp := credParts[1]
@@ -105,13 +119,15 @@ func (a *Authenticator) calculateSignature(r *http.Request, credential, signedHe
 		credentialScope,
 		sha256Hash(canonicalRequest))
 
+	log.Printf("DEBUG: String to sign:\n%s", stringToSign)
+
 	signingKey := a.getSigningKey(a.config.Auth.SecretKey, dateStamp, region, service)
 	signature := hex.EncodeToString(hmacSHA256(signingKey, stringToSign))
 
 	return signature, nil
 }
 
-func (a *Authenticator) createCanonicalRequest(r *http.Request, signedHeaders string) string {
+func (a *Authenticator) CreateCanonicalRequest(r *http.Request, signedHeaders string) string {
 	method := r.Method
 	uri := r.URL.Path
 	if uri == "" {
@@ -143,7 +159,7 @@ func (a *Authenticator) createCanonicalRequest(r *http.Request, signedHeaders st
 	for _, name := range headerNames {
 		var value string
 		if strings.ToLower(name) == "host" {
-			// Special handling for Host header - use r.Host instead of r.Header.Get("host")
+			// Use r.Host instead of r.Header.Get("Host")
 			value = r.Host
 		} else {
 			value = r.Header.Get(name)
@@ -189,10 +205,13 @@ func sha256Hash(data string) string {
 
 func (a *Authenticator) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("DEBUG: AuthMiddleware called for %s %s", r.Method, r.URL.Path)
 		if err := a.Authenticate(r); err != nil {
+			log.Printf("DEBUG: Authentication failed: %v", err)
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
+		log.Printf("DEBUG: Authentication successful for %s %s", r.Method, r.URL.Path)
 		next.ServeHTTP(w, r)
 	})
 }

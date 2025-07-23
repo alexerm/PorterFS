@@ -147,11 +147,12 @@ func TestCreateCanonicalRequest(t *testing.T) {
 	auth := New(cfg)
 
 	req := httptest.NewRequest("GET", "/bucket/object", nil)
+	req.Host = "localhost:9000"
 	req.Header.Set("Host", "localhost:9000")
 	req.Header.Set("X-Amz-Date", "20230101T000000Z")
 	req.Header.Set("X-Amz-Content-Sha256", "UNSIGNED-PAYLOAD")
 
-	canonical := auth.createCanonicalRequest(req, "host;x-amz-content-sha256;x-amz-date")
+	canonical := auth.CreateCanonicalRequest(req, "host;x-amz-content-sha256;x-amz-date")
 
 	expectedParts := []string{
 		"GET",

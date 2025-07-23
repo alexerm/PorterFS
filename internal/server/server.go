@@ -130,10 +130,10 @@ func (s *Server) ListenAndServe(addr string) error {
 
 	// S3 API routes with authentication
 	r.Route("/", func(r chi.Router) {
+		log.Printf("DEBUG: Applying authentication middleware to S3 routes")
 		r.Use(authenticator.AuthMiddleware)
 		r.Get("/", h.ListBuckets)
 		r.Route("/{bucket}", func(r chi.Router) {
-			r.Use(authenticator.AuthMiddleware)
 			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 				// Check for multipart uploads query
 				if r.URL.Query().Get("uploads") != "" {

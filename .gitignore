@@ -74,4 +74,6 @@ coverage.html
 *.prof
 
 # Air live reload
-tmp/ 
+tmp/ test_canonical
+test_signature
+test_signing_key

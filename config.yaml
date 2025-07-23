@@ -23,14 +23,14 @@ auth:
   # S3 access credentials
   # Change these for production use!
   access_key: "porterfs"
-secret_key: "porterfs"
+  secret_key: "porterfs"
 
 logging:
   # Log level: debug, info, warn, error
-  level: "info"
+  level: "debug"
   
   # Log format: json, text
-  format: "json"
+  format: "text"
 
 # Production example with TLS:
 #
