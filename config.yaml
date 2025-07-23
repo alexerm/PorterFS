@@ -1,0 +1,54 @@
+# PorterFS Configuration Example
+# Copy this file to config.yaml and modify as needed
+
+server:
+  # Server bind address and port
+  address: ":9000"
+  
+  # TLS/HTTPS configuration
+  tls:
+    enabled: false
+    cert_file: ""
+    key_file: ""
+
+storage:
+  # Root directory where buckets and objects are stored
+  # This directory will be created if it doesn't exist
+  root_path: "./data"
+  
+  # Maximum total storage size in bytes (100GB default)
+  max_size_bytes: 107374182400
+
+auth:
+  # S3 access credentials
+  # Change these for production use!
+  access_key: "porterfs"
+secret_key: "porterfs"
+
+logging:
+  # Log level: debug, info, warn, error
+  level: "info"
+  
+  # Log format: json, text
+  format: "json"
+
+# Production example with TLS:
+#
+# server:
+#   address: ":443"
+#   tls:
+#     enabled: true
+#     cert_file: "/etc/ssl/certs/porter.crt"
+#     key_file: "/etc/ssl/private/porter.key"
+#
+# storage:
+#   root_path: "/var/lib/porter/data"
+#   max_size_bytes: 1099511627776  # 1TB
+#
+# auth:
+#   access_key: "your-secure-access-key"
+#   secret_key: "your-secure-secret-key-min-40-chars-long"
+#
+# logging:
+#   level: "warn"
+#   format: "json"

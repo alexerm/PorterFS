@@ -1,0 +1,31 @@
+# PorterFS SSL Configuration for Testing
+# This config enables HTTPS with self-signed certificates and custom auth
+
+server:
+  # HTTPS on port 9443
+  address: ":9443"
+  
+  # Enable TLS with self-signed certificates
+  tls:
+    enabled: true
+    cert_file: "./certs/server.crt"
+    key_file: "./certs/server.key"
+
+storage:
+  # Root directory where buckets and objects are stored
+  root_path: "./data-ssl"
+  
+  # Maximum total storage size in bytes (100GB)
+  max_size_bytes: 107374182400
+
+auth:
+  # Custom S3 access credentials for testing
+  access_key: "porter-test-key"
+  secret_key: "porter-test-secret-key-must-be-long-enough"
+
+logging:
+  # Debug level for testing
+  level: "debug"
+  
+  # JSON format for structured logs
+  format: "json"
