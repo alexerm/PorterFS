@@ -64,7 +64,7 @@ jobs:
         go build -o porter-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/porter
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: porter-${{ matrix.goos }}-${{ matrix.goarch }}
         path: porter-${{ matrix.goos }}-${{ matrix.goarch }}
@@ -111,7 +111,7 @@ jobs:
         go-version: 1.21.x
 
     - name: Download Linux binary
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: porter-linux-amd64
 
@@ -145,7 +145,7 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Download all artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
